@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL" )
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String?
+  provider      String? // OAuth provider name
+  providerId    String? // OAuth user ID
+  role          Role      @default(CONSUMER)
+  apis          API[]     @relation("APIProvider")
+  subscriptions Subscription[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([provider, providerId])
+}
+
+enum Role {
+  ADMIN
+  PROVIDER
+  CONSUMER
+}
+
+model API {
+  id            String    @id @default(cuid())
+  name          String
+  description   String
+  baseUrl       String
+  docsUrl       String?
+  category      String
+  status        APIStatus @default(PENDING)
+  owner         User      @relation("APIProvider", fields: [ownerId], references: [id])
+  ownerId       String
+  subscriptions Subscription[]
+  plans         Plan[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum APIStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Plan {
+  id               String   @id @default(cuid())
+  name             String
+  price            Float // 0 for free plan
+  requestsPerMonth Int
+  api              API      @relation(fields: [apiId], references: [id])
+  apiId            String
+  subscriptions    Subscription[]
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  api       API      @relation(fields: [apiId], references: [id])
+  apiId     String
+  plan      Plan     @relation(fields: [planId], references: [id])
+  planId    String
+  apiKey    APIKey?  @relation(fields: [apiKeyId], references: [id])
+  apiKeyId  String?  @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model APIKey {
+  id           String       @id @default(cuid())
+  key          String       @unique @default(cuid()) // Or use a better way to generate
+  subscription Subscription?
+  requests     UsageLog[]
+  createdAt    DateTime     @default(now())
+}
+
+model UsageLog {
+  id         String   @id @default(cuid())
+  apiKey     APIKey   @relation(fields: [apiKeyId], references: [id])
+  apiKeyId   String
+  endpoint   String
+  statusCode Int
+  latencyMs  Int
+  createdAt  DateTime @default(now())
+}
