@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
-import { registerService,loginService, forgotPasswordService, resetPasswordService } from "./auth.service"
+import { registerService,loginService, forgotPasswordService, resetPasswordService, getMeService } from "./auth.service"
+import { AuthRequest } from "../../middleware/auth.middlerware"
 
 const loginWithEmailController = async(req: Request, res: Response) => {
     
@@ -60,4 +61,18 @@ const resetPasswordController = async(req: Request, res: Response) => {
     }
 }
 
-export { loginWithEmailController, registerWithEmailController, forgotPasswordController, resetPasswordController }
+const getMeController = async(req: AuthRequest, res: Response) => {
+    try{
+
+        if(!req.user){
+            return res.status(401).json({message: "Not authorized"})
+        }
+
+        const user = await getMeService(req.user.id)
+        res.status(200).json(user)
+    } catch(err: any){
+        res.status(500).json({message: err.message})
+    }
+}
+
+export { loginWithEmailController, registerWithEmailController, forgotPasswordController, resetPasswordController, getMeController }
