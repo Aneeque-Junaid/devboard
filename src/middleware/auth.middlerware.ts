@@ -9,7 +9,7 @@ export interface AuthRequest extends Request {
         id: string;
         email: string;
         role: string;
-    }
+    } | any
 }
 
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -20,8 +20,10 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
 
             token = req.headers.authorization.split(" ")[1]
 
-            if(!token) return res.status(401).json({message: "Not authorized, no token"})
-            
+            if(!token) {
+                res.status(401).json({message: "Not authorized, no token"})
+                return
+            }
 
             const decoded = jwt.verify(token, config.jwtSecret) as {id: string, email: string}
 
@@ -31,13 +33,14 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
             })
 
             if(!user){
-                return res.status(401).json({message: 'Not authorized, user not found'})
+                res.status(401).json({message: 'Not authorized, user not found'})
+                return
             }
 
             req.user = user;
             next()
         } catch (err: any) {
-            return res.status(401).json({ message: 'Not authorized, token failed' });
+            res.status(401).json({ message: 'Not authorized, token failed' });
         }
     }
 

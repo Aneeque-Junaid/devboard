@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { registerService,loginService, forgotPasswordService, resetPasswordService, getMeService } from "./auth.service"
+import { registerService,loginService, forgotPasswordService, resetPasswordService, getMeService, OAuthService } from "./auth.service"
 import { AuthRequest } from "../../middleware/auth.middlerware"
 
 const loginWithEmailController = async(req: Request, res: Response) => {
@@ -75,4 +75,10 @@ const getMeController = async(req: AuthRequest, res: Response) => {
     }
 }
 
-export { loginWithEmailController, registerWithEmailController, forgotPasswordController, resetPasswordController, getMeController }
+const OAuthController = (req: Request, res: Response) => {
+    const token = OAuthService(req.user)
+    res.json({token, user: req.user})
+}
+
+
+export { loginWithEmailController, registerWithEmailController, forgotPasswordController, resetPasswordController, getMeController, OAuthController }

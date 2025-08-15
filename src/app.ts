@@ -4,6 +4,8 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import apiRouter from './api';
 import errorHandler from './middleware/errorHandler';
+import passport from 'passport';
+import './config/passport'
 
 const app: Application = express();
 
@@ -11,6 +13,8 @@ const app: Application = express();
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // Parse incoming JSON requests
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded payloads
+
+app.use(passport.initialize())
 
 // Health Check Endpoint
 app.get('/health', (req: Request, res: Response) => {
