@@ -3,6 +3,7 @@ import {Request, Response, NextFunction} from "express"
 import jwt from "jsonwebtoken"
 import prisma from "../services/prisma"
 import config from "../config"
+import { Role } from "@prisma/client"
 
 export interface AuthRequest extends Request {
     user?: {
@@ -46,5 +47,26 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
 
     if(!token){
         res.status(401).json({message: "Not authorized, no token"})
+    }
+}
+
+export const authorize = (roles: Role[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        if(!req.user){
+            res.status(401).json({message: "Not authorized, no user data"})
+            return
+        }
+
+        if(roles.includes(req.user.role as Role)){
+            next()
+            return
+        }
+
+        if(req.params.id && req.params.id === req.user.id){
+            next()
+            return
+        }
+
+        res.status(403).json({message: 'Forbidden: You do not have permission to perform this action'})
     }
 }
